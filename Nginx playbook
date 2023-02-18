@@ -1,0 +1,32 @@
+---
+- name: Install Nginx and configure site
+  hosts: webserver
+  become: true
+
+  vars:
+    nginx_port: 80
+    site_domain: example.com
+
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Configure Nginx site
+      template:
+        src: templates/nginx-site.conf.j2
+        dest: /etc/nginx/sites-available/{{ site_domain }}
+      notify: Reload Nginx
+
+    - name: Enable Nginx site
+      file:
+        src: /etc/nginx/sites-available/{{ site_domain }}
+        dest: /etc/nginx/sites-enabled/{{ site_domain }}
+        state: link
+
+  handlers:
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded
